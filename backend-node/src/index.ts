@@ -4,19 +4,39 @@ import path from 'path';
 import { resolvers } from './resolvers/employeeResolver';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 const prisma = new PrismaClient();
 
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
+
 const typeDefs = readFileSync(path.join(__dirname, 'schema', 'employee-schema.graphql'), 'utf8');
+
+interface JwtPayload {
+  userId: number;
+  username: string;
+  role: string;
+}
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req }) => {
-    // basic auth context; token parsing will be in resolvers where needed
     const auth = req.headers.authorization || '';
-    return { prisma, auth };
+    let user: JwtPayload | null = null;
+
+    if (auth.startsWith('Bearer ')) {
+      const token = auth.slice(7);
+      try {
+        user = jwt.verify(token, JWT_SECRET) as JwtPayload;
+      } catch {
+        // Invalid token, user remains null
+        user = null;
+      }
+    }
+
+    return { prisma, user };
   }
 });
 
