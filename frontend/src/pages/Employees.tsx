@@ -1,24 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { getClient } from "../lib/api";
-import { gql } from "graphql-request";
 import EmployeeCard from "../components/EmployeeCard";
 import EmployeeDetailModal from "../components/EmployeeDetailModal";
-
-const EMPLOYEES_QUERY = gql`
-  query Employees($page: Int, $perPage: Int, $filter: EmployeeFilter) {
-    employees(page: $page, perPage: $perPage, filter: $filter) {
-      items {
-        id
-        fullName
-        className
-        attendancePercentage
-      }
-      total
-      page
-      perPage
-    }
-  }
-`;
+import EmployeeFormModal from "../components/EmployeeFormModal";
+import {
+  EMPLOYEES_QUERY,
+  CREATE_EMPLOYEE,
+  UPDATE_EMPLOYEE,
+  DELETE_EMPLOYEE,
+} from "../graphql/employees";
 
 export default function Employees({ token, onLogout }: { token: string; onLogout: () => void }) {
   const [items, setItems] = useState<any[]>([]);
@@ -29,6 +19,22 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
   const [viewGrid, setViewGrid] = useState(true);
   const [selected, setSelected] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [mutating, setMutating] = useState(false);
+
+  // decode token client-side for UI gating (not a security boundary)
+  const currentUser = token
+    ? (() => {
+        try {
+          return JSON.parse(atob(token.split(".")[1]));
+        } catch {
+          return null;
+        }
+      })()
+    : null;
+  const isAdmin = currentUser?.role === "admin";
 
   const fetchData = async () => {
     setLoading(true);
@@ -46,7 +52,56 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
     }
   };
 
-  useEffect(() => { fetchData(); }, [page, query]);
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, query]);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this employee?")) return;
+    setMutating(true);
+    try {
+      const client = getClient(token);
+      await client.request(DELETE_EMPLOYEE, { id });
+      await fetchData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Delete failed: " + (err?.message ?? err));
+    } finally {
+      setMutating(false);
+    }
+  };
+
+  const handleCreate = async (input: any) => {
+    setMutating(true);
+    try {
+      const client = getClient(token);
+      await client.request(CREATE_EMPLOYEE, { input });
+      setCreating(false);
+      await fetchData();
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    } finally {
+      setMutating(false);
+    }
+  };
+
+  const handleUpdate = async (input: any) => {
+    if (!editing) return;
+    setMutating(true);
+    try {
+      const client = getClient(token);
+      await client.request(UPDATE_EMPLOYEE, { id: editing.id, input });
+      setEditing(null);
+      await fetchData();
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    } finally {
+      setMutating(false);
+    }
+  };
 
   return (
     <div>
@@ -54,13 +109,15 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
         <h1 className="text-2xl header-title">Employee POC</h1>
 
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <button className="btn-primary" onClick={() => setCreating(true)}>
+              New employee
+            </button>
+          )}
+
           <button className="btn-outline flex items-center gap-2" onClick={() => setViewGrid((s) => !s)}>
             <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
             List / Grid
-          </button>
-
-          <button className="btn-primary" title="Export">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>
       </div>
@@ -74,8 +131,13 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
       ) : (
         <div className={viewGrid ? "grid grid-cols-3 gap-4" : "space-y-4"}>
           {items.map((emp) => (
-            <div key={emp.id} onClick={() => setSelected(emp)}>
-              <EmployeeCard employee={emp} compact={!viewGrid} />
+            <div key={emp.id}>
+              <EmployeeCard
+                employee={emp}
+                compact={!viewGrid}
+                onEdit={() => isAdmin && setEditing(emp)}
+                onDelete={() => isAdmin && handleDelete(emp.id)}
+              />
             </div>
           ))}
         </div>
@@ -91,6 +153,22 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
       </div>
 
       {selected && <EmployeeDetailModal employee={selected} onClose={() => setSelected(null)} />}
+
+      <EmployeeFormModal
+        open={creating}
+        initialValues={null}
+        onClose={() => setCreating(false)}
+        onSubmit={handleCreate}
+        submitting={mutating}
+      />
+
+      <EmployeeFormModal
+        open={!!editing}
+        initialValues={editing}
+        onClose={() => setEditing(null)}
+        onSubmit={handleUpdate}
+        submitting={mutating}
+      />
     </div>
   );
 }
