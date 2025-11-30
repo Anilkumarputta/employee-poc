@@ -21,6 +21,12 @@ input EmployeeFilter {
   minAttendance: Float
 }
 
+input EmployeeInput {
+  fullName: String!
+  className: String
+  attendancePercentage: Float
+}
+
 type EmployeesPage {
   items: [Employee!]!
   total: Int!
@@ -35,4 +41,7 @@ type Query {
 
 type Mutation {
   login(username: String!, password: String!): AuthPayload!
+  createEmployee(input: EmployeeInput!): Employee!
+  updateEmployee(id: Int!, input: EmployeeInput!): Employee!
+  deleteEmployee(id: Int!): Boolean!
 }
