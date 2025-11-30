@@ -38,11 +38,15 @@ interface Context {
   user: JwtPayload | null;
 }
 
-function ensureAdmin(context: Context): void {
+function ensureAuthenticated(context: Context): void {
   if (!context.user) {
     throw new AuthenticationError('Authentication required');
   }
-  if (context.user.role !== 'admin') {
+}
+
+function ensureAdmin(context: Context): void {
+  ensureAuthenticated(context);
+  if (context.user!.role !== 'admin') {
     throw new AuthenticationError('Admin role required');
   }
 }
