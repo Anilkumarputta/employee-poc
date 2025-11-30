@@ -21,8 +21,15 @@ input EmployeeFilter {
   minAttendance: Float
 }
 
+type EmployeesPage {
+  items: [Employee!]!
+  total: Int!
+  page: Int!
+  perPage: Int!
+}
+
 type Query {
-  employees(page: Int = 1, perPage: Int = 10, filter: EmployeeFilter): [Employee!]!
+  employees(page: Int = 1, perPage: Int = 10, filter: EmployeeFilter): EmployeesPage!
   employee(id: Int!): Employee
 }
 
