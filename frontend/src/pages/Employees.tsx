@@ -160,6 +160,7 @@ export default function Employees({
                 compact={!viewGrid}
                 onEdit={() => isAdmin && setEditing(emp)}
                 onDelete={() => isAdmin && handleDelete(emp.id)}
+                onClick={() => setSelected(emp)}
               />
             </div>
           ))}
