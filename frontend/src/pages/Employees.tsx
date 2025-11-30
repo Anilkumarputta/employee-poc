@@ -10,7 +10,13 @@ import {
   DELETE_EMPLOYEE,
 } from "../graphql/employees";
 
-export default function Employees({ token, onLogout }: { token: string; onLogout: () => void }) {
+export default function Employees({
+  token,
+  onLogout,
+}: {
+  token?: string | null;
+  onLogout?: () => void;
+}) {
   const [items, setItems] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [perPage] = useState(9);
@@ -25,28 +31,30 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
   const [mutating, setMutating] = useState(false);
 
   // decode token client-side for UI gating (not a security boundary)
-  const currentUser = token
-    ? (() => {
-        try {
-          return JSON.parse(atob(token.split(".")[1]));
-        } catch {
-          return null;
-        }
-      })()
-    : null;
+  let currentUser: any = null;
+  if (token) {
+    try {
+      const payload = token.split(".")[1];
+      if (payload) {
+        currentUser = JSON.parse(atob(payload));
+      }
+    } catch {
+      currentUser = null;
+    }
+  }
   const isAdmin = currentUser?.role === "admin";
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const client = getClient(token);
+      const client = getClient(token ?? null);
       const variables: any = { page, perPage, filter: {} };
       if (query) variables.filter.query = query;
       const data: any = await client.request(EMPLOYEES_QUERY, variables);
-      setItems(data.employees.items);
-      setTotal(data.employees.total);
+      setItems(data.employees.items ?? []);
+      setTotal(data.employees.total ?? 0);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load employees:", err);
     } finally {
       setLoading(false);
     }
@@ -61,12 +69,12 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
     if (!confirm("Delete this employee?")) return;
     setMutating(true);
     try {
-      const client = getClient(token);
+      const client = getClient(token ?? null);
       await client.request(DELETE_EMPLOYEE, { id });
       await fetchData();
     } catch (err: any) {
-      console.error(err);
-      alert("Delete failed: " + (err?.message ?? err));
+      console.error("Delete failed:", err);
+      alert("Delete failed: " + (err?.message ?? String(err)));
     } finally {
       setMutating(false);
     }
@@ -75,12 +83,12 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
   const handleCreate = async (input: any) => {
     setMutating(true);
     try {
-      const client = getClient(token);
+      const client = getClient(token ?? null);
       await client.request(CREATE_EMPLOYEE, { input });
       setCreating(false);
       await fetchData();
     } catch (err: any) {
-      console.error(err);
+      console.error("Create failed:", err);
       throw err;
     } finally {
       setMutating(false);
@@ -91,12 +99,12 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
     if (!editing) return;
     setMutating(true);
     try {
-      const client = getClient(token);
+      const client = getClient(token ?? null);
       await client.request(UPDATE_EMPLOYEE, { id: editing.id, input });
       setEditing(null);
       await fetchData();
     } catch (err: any) {
-      console.error(err);
+      console.error("Update failed:", err);
       throw err;
     } finally {
       setMutating(false);
@@ -115,15 +123,30 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
             </button>
           )}
 
-          <button className="btn-outline flex items-center gap-2" onClick={() => setViewGrid((s) => !s)}>
-            <svg className="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <button
+            className="btn-outline flex items-center gap-2"
+            onClick={() => setViewGrid((s) => !s)}
+          >
+            <svg
+              className="w-5 h-5 text-brand-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
             List / Grid
           </button>
         </div>
       </div>
 
       <div className="mb-6">
-        <input className="search-input" placeholder="Search by name" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input
+          className="search-input"
+          placeholder="Search by name"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </div>
 
       {loading ? (
@@ -146,13 +169,27 @@ export default function Employees({ token, onLogout }: { token: string; onLogout
       <div className="flex items-center justify-between mt-6">
         <div className="text-sm text-gray-600">Total: {total}</div>
         <div className="flex gap-2">
-          <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1 border rounded">Prev</button>
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="px-3 py-1 border rounded"
+          >
+            Prev
+          </button>
           <div className="px-3 py-1 border rounded">{page}</div>
-          <button disabled={page * perPage >= total} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 border rounded">Next</button>
+          <button
+            disabled={page * perPage >= total}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-3 py-1 border rounded"
+          >
+            Next
+          </button>
         </div>
       </div>
 
-      {selected && <EmployeeDetailModal employee={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <EmployeeDetailModal employee={selected} onClose={() => setSelected(null)} />
+      )}
 
       <EmployeeFormModal
         open={creating}
