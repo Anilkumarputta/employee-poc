@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "vaild": "vite build",
+    "valid": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 || true"
