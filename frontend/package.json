@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit || true",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 || true"
+    "preview": "vite preview"
   },
   "dependencies": {
     "graphql-request": "^5.0.0",
@@ -18,7 +16,6 @@
     "vite": "^5.4.21",
     "typescript": "^5.0.0",
     "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
-    "eslint": "^8.0.0"
+    "@types/react-dom": "^18.0.0"
   }
 }
