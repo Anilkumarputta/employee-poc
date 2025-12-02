@@ -1,16 +1,11 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import Employees from "./pages/Employees";
-import "./styles/index.css";
+import App from "./App";
+import "./styles.css";
 
-const container = document.getElementById("root");
-if (!container) {
-  throw new Error("Root element not found: expected <div id='root'></div> in index.html");
-}
-
-const root = createRoot(container);
+const root = createRoot(document.getElementById("root")!);
 root.render(
   <React.StrictMode>
-    <Employees />
+    <App />
   </React.StrictMode>
 );
