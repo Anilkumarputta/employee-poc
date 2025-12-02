@@ -23,7 +23,9 @@ async function start() {
   });
 
   await server.start();
-  server.applyMiddleware({ app, path: "/graphql" });
+
+  // Cast app to any to avoid TypeScript type mismatch between @types/express versions
+  server.applyMiddleware({ app: app as any, path: "/graphql" });
 
   const httpServer = http.createServer(app);
   httpServer.listen(PORT, () => {
