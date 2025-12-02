@@ -7,11 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Employee {
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+model User {
   id        Int      @id @default(autoincrement())
-  name      String
   email     String   @unique
-  position  String?
-  salary    Float?
+  password  String
+  role      Role     @default(EMPLOYEE)
   createdAt DateTime @default(now())
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String   @unique
+  age        Int
+  class      String
+  subjects   String[]  // Postgres array
+  attendance Float
+  createdAt  DateTime @default(now())
+
+  @@index([name])
+  @@index([class])
 }
