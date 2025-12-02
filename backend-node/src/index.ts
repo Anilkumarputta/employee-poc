@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Application } from "express";
 import cors from "cors";
 import http from "http";
 import dotenv from "dotenv";
@@ -10,7 +10,7 @@ import { createContext } from "./context";
 dotenv.config();
 
 const PORT = Number(process.env.PORT || 4000);
-const app = express();
+const app: Application = express();
 
 app.use(cors());
 app.get("/", (_req, res) => res.send("OK"));
