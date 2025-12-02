@@ -7,16 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           Int     @id @default(autoincrement())
-  username     String  @unique
-  passwordHash String
-  role         String  @default("employee")
-}
-
 model Employee {
-  id                  Int     @id @default(autoincrement())
-  fullName            String
-  className           String?
-  attendancePercentage Float?
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  position  String?
+  salary    Float?
+  createdAt DateTime @default(now())
 }
