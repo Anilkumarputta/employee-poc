@@ -1,31 +1,53 @@
 import { Context } from "../context";
 
-export const resolvers = {
-  Query: {
-    employees: async (_parent: any, _args: any, ctx: Context) => {
-      return ctx.prisma.employee.findMany({ orderBy: { id: "asc" } });
-    },
-    employee: async (_parent: any, args: { id: number }, ctx: Context) => {
-      return ctx.prisma.employee.findUnique({ where: { id: args.id } });
-    }
-  },
+/**
+ * Resolver module for employee-specific mutations.
+ * Ensure this file only writes fields that exist in the Prisma schema:
+ *  - name, email, age, class, subjects, attendance
+ */
 
+export const employeeResolver = {
   Mutation: {
-    createEmployee: async (
-      _parent: any,
-      args: { input: { name: string; email: string; position?: string; salary?: number } },
-      ctx: Context
-    ) => {
-      const { name, email, position, salary } = args.input;
+    createEmployee: async (_parent: any, args: { input: any }, ctx: Context) => {
+      // Authorization: only admins can create
+      if (!ctx.user || ctx.user.role !== "ADMIN") {
+        throw new Error("Not authorized");
+      }
+      const input = args.input;
       const created = await ctx.prisma.employee.create({
-        data: { name, email, position, salary }
+        data: {
+          name: input.name,
+          email: input.email,
+          age: input.age,
+          class: input.class,
+          // subjects is string[] in Prisma schema
+          subjects: input.subjects ?? [],
+          attendance: input.attendance ?? 0
+        }
       });
       return created;
     },
 
-    deleteEmployee: async (_parent: any, args: { id: number }, ctx: Context) => {
-      const deleted = await ctx.prisma.employee.delete({ where: { id: args.id } });
-      return deleted;
+    updateEmployee: async (_parent: any, args: { id: number; input: any }, ctx: Context) => {
+      // Authorization: only admins can update
+      if (!ctx.user || ctx.user.role !== "ADMIN") {
+        throw new Error("Not authorized");
+      }
+      const input = args.input;
+      const updated = await ctx.prisma.employee.update({
+        where: { id: args.id },
+        data: {
+          name: input.name ?? undefined,
+          email: input.email ?? undefined,
+          age: input.age ?? undefined,
+          class: input.class ?? undefined,
+          subjects: input.subjects ?? undefined,
+          attendance: input.attendance ?? undefined
+        }
+      });
+      return updated;
     }
   }
 };
+
+export default employeeResolver;
