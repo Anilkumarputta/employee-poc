@@ -1,5 +1,5 @@
 /**
- * Plain TS seed (compiled in build) — creates test employees using fields
+ * Plain TS seed — creates test employees using fields
  * that exist in Prisma schema (no `position` or `salary` properties).
  *
  * Run locally:
@@ -11,7 +11,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const items = [];
+  const items: Array<any> = [];
   const subjectsPool = [
     ["Math", "Physics"],
     ["English", "History"],
