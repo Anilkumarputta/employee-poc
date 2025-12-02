@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx"; // explicit extension to avoid resolver issues
+import App from "./App"; // import without extension; ensure file is named exactly "App.tsx"
 import "./styles.css";
 
 const root = createRoot(document.getElementById("root")!);
