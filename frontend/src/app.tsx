@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { client, GET_EMPLOYEES, CREATE_EMPLOYEE } from "./api";
+import "./styles.css";
 
 type Employee = {
   id: number;
