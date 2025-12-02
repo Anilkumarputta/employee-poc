@@ -1,32 +1,23 @@
 # backend-node
 
-This is a minimal Node + TypeScript GraphQL backend using Prisma.
+Node + TypeScript GraphQL backend (Prisma + Apollo).
 
-Quick start (local)
-
-1. Copy .env.example to .env and set DATABASE_URL and JWT_SECRET:
+Local dev:
+1. Copy env:
    cp .env.example .env
+   Edit .env to set DATABASE_URL and JWT_SECRET.
 
-2. Install dependencies and generate lockfile:
+2. Install & build:
    cd backend-node
    npm install
-
-3. Generate Prisma client and apply migrations (if you have migrations):
    npx prisma generate
-   npx prisma migrate deploy
-
-4. Build and run:
    npm run build
+
+3. Run migrations and seed:
+   npx prisma migrate deploy
+   npm run seed
+
+4. Start:
    npm run start
-
-During development:
+   # or dev:
    npm run dev
-
-Notes for Render
-- Root directory on Render: backend-node
-- Build command: npm ci && npm run build
-- Start command: npx prisma migrate deploy && npm run start
-- Set environment variables in Render service:
-  - DATABASE_URL
-  - JWT_SECRET
-  - NODE_ENV=production
